@@ -1,0 +1,162 @@
+// CUP specification for NewLang.
+
+import java_cup.runtime.*;
+import esercitazione4.SyntaxTreeNodes.*;
+import esercitazione4.SyntaxTreeNodes.Expressions.*;
+
+
+terminal T_MAIN, T_SEMI, T_COMMA, T_PIPE, T_VAR, T_INT, T_FLOAT, T_STRING,
+        T_BOOL, T_CHAR, T_VOID, T_DEF, T_OUT, T_FOR, T_IF, T_THEN, T_ELSE, T_WHILE,
+        T_TO, T_LOOP, T_READ, T_WRITE, T_WRITELN, T_LPAR, T_RPAR, T_LBRAC,
+        T_RBRAC, T_COLON, T_ASSIGN, T_RETURN, T_TRUE, T_FALSE, T_PLUS,
+        T_MINUS, T_TIMES, T_DIV, T_POW, T_STR_CONCAT, T_EQ, T_NE, T_LT,
+        T_LE, T_GT, T_GE, T_AND, T_OR, T_NOT;
+terminal String T_INTEGER_CONST, T_REAL_CONST, T_STRING_CONST, T_CHAR_CONST, T_ID;
+
+nonterminal Program, DeclList, MainFunDecl, VarDecl, FunDecl, Type, IdInitList,
+        IdInitObblList, Expr, Const, ParamDeclList, TypeOrVoid, Body, ExprList,
+        StatList, NonEmptyParamDeclList, ParDecl, IdList, VarDeclList, Stat, Else,
+        IfStat, ForStat, ReadStat, WriteStat, AssignStat, WhileStat, FunCall;
+
+precedence left T_PLUS, T_MINUS;
+precedence left T_TIMES, T_DIV, T_POW, T_STR_CONCAT;
+precedence left T_AND, T_OR, T_NOT, T_GT, T_GE, T_LT, T_LE, T_EQ, T_NE;
+precedence nonassoc T_FOR, T_IF, T_WHILE, T_LPAR, T_RETURN, T_ID, T_RBRAC;
+
+/* A program is a set of declarations with at least one main function */
+Program ::= DeclList:preDecls MainFunDecl:main DeclList:postDecls      {: RESULT = new Program((DeclList) preDecls, (MainFunDecl) main, (DeclList) postDecls); :}
+            ;
+
+/* A declaration list is a set of either zero or more variable or function declarations */
+DeclList ::= VarDecl:vDecl DeclList:dList                              {: RESULT = new DeclList((VarDecl) vDecl, (DeclList) dList); :} |
+             FunDecl:fDecl DeclList:dList                              {: RESULT = new DeclList((FunDecl) fDecl, (DeclList) dList); :} |
+            /* empty */                                                {: RESULT = new DeclList(); :} ;
+
+/* The main function declaration is prefixed with the T_MAIN token */
+MainFunDecl ::= T_MAIN FunDecl:fDecl                                   {: RESULT = new MainFunDecl((FunDecl) fDecl); :} ;
+
+/* A variable declaration specifies the type of one or more IDs, explicitly or implicitly */
+VarDecl ::= Type:type IdInitList:idList T_SEMI                         {: RESULT = new VarDecl((Type) type, (IdInitList) idList); :} |
+            T_VAR IdInitObblList:idObblList T_SEMI                     {: RESULT = new VarDecl((IdInitObblList) idObblList); :};
+
+Type ::= T_INT                                                         {: RESULT = new Type(Type.INT); :} |
+        T_BOOL                                                         {: RESULT = new Type(Type.BOOL); :} |
+        T_FLOAT                                                        {: RESULT = new Type(Type.FLOAT); :} |
+        T_STRING                                                       {: RESULT = new Type(Type.STRING); :} |
+        T_CHAR                                                         {: RESULT = new Type(Type.CHAR); :} ;
+
+/* One or more IDs optionally assigned to an expression */
+IdInitList ::= T_ID:id                                                 {: RESULT = new IdInitList(new Identifier(id)); :} |
+            IdInitList:idList T_COMMA T_ID:id                          {: RESULT = new IdInitList(new Identifier(id), (IdInitList) idList); :} |
+            T_ID:id T_ASSIGN Expr:expr                                 {: RESULT = new IdInitList(new Identifier(id), (Expr) expr); :} |
+            IdInitList:idList T_COMMA T_ID:id T_ASSIGN Expr:expr       {: RESULT = new IdInitList(new Identifier(id), (Expr) expr, (IdInitList) idList); :};
+
+/* One or more IDs with a required assignment to a const value to infer the correct type */
+IdInitObblList ::= T_ID:id T_ASSIGN Const:expr                         {: RESULT = new IdInitObblList(new Identifier(id), (Const) expr); :} |
+            IdInitObblList:idList T_COMMA T_ID:id T_ASSIGN Const:expr  {: RESULT = new IdInitObblList(new Identifier(id), (Const) expr, (IdInitObblList) idList); :} ;
+
+Const ::= T_INTEGER_CONST:intConst                                     {: RESULT = new Const(new IntegerConstExpr(intConst), new Type(Type.INT)); :} |
+            T_REAL_CONST:realConst                                     {: RESULT = new Const(new RealConstExpr(realConst), new Type(Type.FLOAT)); :} |
+            T_TRUE                                                     {: RESULT = new Const(new TrueConstExpr(), new Type(Type.BOOL)); :} |
+            T_FALSE                                                    {: RESULT = new Const(new FalseConstExpr(), new Type(Type.BOOL)); :} |
+            T_STRING_CONST:strConst                                    {: RESULT = new Const(new StringConstExpr(strConst), new Type(Type.STRING)); :} |
+            T_CHAR_CONST:charConst                                     {: RESULT = new Const(new CharConstExpr(charConst), new Type(Type.CHAR)); :};
+
+/* def myFun(params...): type { ... } */
+FunDecl ::= T_DEF T_ID:id T_LPAR ParamDeclList:dList T_RPAR
+                                    T_COLON TypeOrVoid:type Body:body  {: RESULT = new FunDecl(new Identifier(id), (ParamDeclList) dList, (Type) type, (Body) body); :};
+
+/* Code area between curly braces with declarations and statements */
+Body ::= T_LBRAC VarDeclList:vList StatList:sList T_RBRAC              {: RESULT = new Body((VarDeclList) vList, (StatList) sList); :};
+
+ParamDeclList ::= /* empty */                                          {: RESULT = new ParamDeclList(); :} |
+            NonEmptyParamDeclList:declList                             {: RESULT = new ParamDeclList((ParamDeclList) declList); :};
+
+NonEmptyParamDeclList ::= ParDecl:pDecl                                {: RESULT = new ParamDeclList((ParDecl) pDecl); :} |
+            NonEmptyParamDeclList:declList T_PIPE ParDecl:pDecl        {: RESULT = new ParamDeclList((ParDecl) pDecl, (ParamDeclList) declList); :} ;
+
+/* Parameter declaration (in/out) */
+ParDecl ::= Type:type IdList:idList                                    {: RESULT = new ParDecl((Type) type, (IdList) idList, false); :} |
+            T_OUT Type:type IdList:idList                              {: RESULT = new ParDecl((Type) type, (IdList) idList, true); :} ;
+
+TypeOrVoid ::= Type:type                                               {: RESULT = type; :} |
+            T_VOID                                                     {: RESULT = new Type(Type.VOID); :} ;
+
+VarDeclList ::= /* empty */                                            {: RESULT = new VarDeclList(); :} |
+            VarDecl:vDecl VarDeclList:declList                         {: RESULT = new VarDeclList((VarDecl) vDecl, (VarDeclList) declList); :} ;
+
+/* TODO swapped StatList order */
+/* old:
+StatList ::= Stat |
+            Stat StatList;
+            */
+StatList ::= StatList:statList Stat:stat                               {: RESULT = new StatList((Stat) stat, (StatList) statList); :} |
+            Stat:stat                                                  {: RESULT = new StatList((Stat) stat); :} ;
+
+/* Optional statement. Ended by a semicolon except for scoped statements (if, for, while) */
+Stat ::= IfStat:ifStat                                                 {: RESULT = ifStat; :} |
+            ForStat:forStat                                            {: RESULT = forStat; :} |
+            ReadStat:readStat T_SEMI                                   {: RESULT = readStat; :} |
+            WriteStat:writeStat T_SEMI                                 {: RESULT = writeStat; :} |
+            AssignStat:assignStat T_SEMI                               {: RESULT = assignStat; :} |
+            WhileStat:whileStat                                        {: RESULT = whileStat; :} |
+            FunCall:funCall T_SEMI                                     {: RESULT = funCall; :} |
+            T_RETURN Expr:expr T_SEMI                                  {: RESULT = new ReturnStat((Expr) expr); :} |
+            T_RETURN T_SEMI                                            {: RESULT = new ReturnStat(null); :} |
+            /* empty */                                                {: RESULT = null; :} ;
+
+/* if expr then {} else {} */
+IfStat ::= T_IF Expr:expr T_THEN Body:body Else:elseStat                   {: RESULT = new IfStat((Expr) expr, (Body) body, (Else) elseStat); :};
+
+Else ::= /* empty */                                                       {: RESULT = null; :} |
+            T_ELSE Body:body                                               {: RESULT = new Else((Body) body); :} ;
+
+WhileStat ::= T_WHILE Expr:expr T_LOOP Body:body                           {: RESULT = new WhileStat((Expr) expr, (Body) body); :} ;
+
+ForStat ::= T_FOR T_ID:id T_ASSIGN T_INTEGER_CONST:from
+                                T_TO T_INTEGER_CONST:to T_LOOP Body:body   {: RESULT = new ForStat(new Identifier(id), from, to, (Body) body); :} ;
+
+/* Accept input from keyboard to write in one or more variables, optionally with a message shown to the user */
+ReadStat ::= IdList:idList T_READ T_STRING_CONST:message                   {: RESULT = new ReadStat((IdList) idList, new StringConstExpr(message)); :} |
+            IdList:idList T_READ                                           {: RESULT = new ReadStat((IdList) idList, null); :} ;
+
+IdList ::= T_ID:id                                                         {: RESULT = new IdList(new Identifier(id)); :} |
+            IdList:idList T_COMMA T_ID:id                                  {: RESULT = new IdList(new Identifier(id), (IdList) idList); :} ;
+
+/* Output the result of an expression, with an optional ending newline character */
+WriteStat ::= T_LPAR ExprList:exprList T_RPAR T_WRITE                      {: RESULT = new WriteStat((ExprList) exprList, false); :} |
+            T_LPAR ExprList:exprList T_RPAR T_WRITELN                      {: RESULT = new WriteStat((ExprList) exprList, true); :} ;
+
+AssignStat ::= IdList:idList T_ASSIGN ExprList:exprList                    {: RESULT = new AssignStat((IdList) idList, (ExprList) exprList); :} ;
+
+FunCall ::= T_ID:id T_LPAR ExprList:exprList T_RPAR                        {: RESULT = new FunCall(new Identifier(id), (ExprList) exprList); :} |
+            T_ID:id T_LPAR T_RPAR                                          {: RESULT = new FunCall(new Identifier(id), new ExprList()); :} ;
+
+ExprList ::= Expr:expr                                                     {: RESULT = new ExprList((Expr) expr); :} |
+            Expr:expr T_COMMA ExprList:exprList                            {: RESULT = new ExprList((Expr) expr, (ExprList) exprList); :} ;
+
+Expr ::= T_TRUE                                                            {: RESULT = new TrueConstExpr(); :} |
+            T_FALSE                                                        {: RESULT = new FalseConstExpr(); :} |
+            T_INTEGER_CONST:intConst                                       {: RESULT = new IntegerConstExpr(intConst); :} |
+            T_REAL_CONST:realConst                                         {: RESULT = new RealConstExpr(realConst); :} |
+            T_STRING_CONST:strConst                                        {: RESULT = new StringConstExpr(strConst); :} |
+            T_CHAR_CONST:charConst                                         {: RESULT = new CharConstExpr(charConst); :} |
+            T_ID:id                                                        {: RESULT = new Identifier(id); :} |
+            FunCall:funCall                                                {: RESULT = funCall; :} |
+            Expr:l T_PLUS Expr:r                                           {: RESULT = new AddExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_MINUS Expr:r                                          {: RESULT = new SubExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_TIMES Expr:r                                          {: RESULT = new TimesExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_DIV Expr:r                                            {: RESULT = new DivExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_AND Expr:r                                            {: RESULT = new AndExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_POW Expr:r                                            {: RESULT = new PowExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_STR_CONCAT Expr:r                                     {: RESULT = new StrConcatExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_OR Expr:r                                             {: RESULT = new OrExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_GT Expr:r                                             {: RESULT = new GTExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_GE Expr:r                                             {: RESULT = new GEExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_LT Expr:r                                             {: RESULT = new LTExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_LE Expr:r                                             {: RESULT = new LEExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_EQ Expr:r                                             {: RESULT = new EQExpr((Expr) l, (Expr) r); :} |
+            Expr:l T_NE Expr:r                                             {: RESULT = new NEExpr((Expr) l, (Expr) r); :} |
+            T_MINUS Expr:expr                                              {: RESULT = new MinusExpr((Expr) expr); :} |
+            T_NOT Expr:expr                                                {: RESULT = new NotExpr((Expr) expr); :} |
+            T_LPAR Expr:expr T_RPAR                                        {: RESULT = expr; :} ;

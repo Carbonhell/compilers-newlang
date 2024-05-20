@@ -1,0 +1,7 @@
+# Modifiche
+
+
+1) La specifica lessicale include un lessema addizionale, "then", per gli statement *if* non associato ad alcun token nella specifica lessicale. Il token è stato aggiunto come parola riservata.
+2) Il costruttore del nodo AssignStat effettua un controllo per valutare se la dimensione della lista di identificatori e quella della lista di espressioni siano uguali. Il caso di test [assign_stat_wrong_use.nl](test_files/assign_stat_wrong_use.nl) mostra un uso improprio di questo statement.
+3) Il nodo FunCall, nella specifica del syntax tree, implica un attributo su ogni argomento della funzione chiamata per specificare se esso si riferisce ad un parametro "in" o "out". La specifica grammaticale non include alcun modo per dedurre questa informazione (come ad esempio un token particolare come prefix di un argomento relativo ad un parametro "out"), per tal motivo tale controllo verrà effettuato nella prossima esercitazione nell'analisi semantica. Ciò sarà possibile avendo la definizione della funzione chiamata nella tabella dei simboli.
+4) Il nodo Program ha un campo extra che si riferisce alla funzione main. Per tal motivo, la lista delle definizioni delle funzioni conterrà solo le funzioni diverse da quella contrassegnata come main.

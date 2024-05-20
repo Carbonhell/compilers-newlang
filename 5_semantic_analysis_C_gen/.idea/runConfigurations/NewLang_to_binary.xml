@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="NewLang to binary" type="CompoundRunConfigurationType">
+    <toRun name="Custom" type="Application" />
+    <toRun name="Compile c" type="ShConfigurationType" />
+    <method v="2" />
+  </configuration>
+</component>

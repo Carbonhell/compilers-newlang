@@ -1,0 +1,10 @@
+out
+/.idea/*
+!/.idea/runConfigurations
+*.iml
+/target/
+*.pdf
+*.exe
+*.out
+*.c
+!Type_system_del_linguaggio_NewLang.pdf

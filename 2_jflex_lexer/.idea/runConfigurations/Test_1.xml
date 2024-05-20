@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Test 1" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="Tester" />
+    <module name="carbonic_es2_jflex" />
+    <option name="PROGRAM_PARAMETERS" value="test/test_1.inp" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

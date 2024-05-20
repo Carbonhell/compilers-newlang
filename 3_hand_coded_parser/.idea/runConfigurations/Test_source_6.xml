@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Test source 6" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="RecDesParser" />
+    <module name="carbonic_es3" />
+    <option name="PROGRAM_PARAMETERS" value="test_files/file_source6.txt" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

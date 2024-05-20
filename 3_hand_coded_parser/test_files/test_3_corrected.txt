@@ -1,0 +1,1 @@
+x <-- 1 # The grammar requires a file to have at least one correct statement. Empty files are not allowed.

@@ -1,0 +1,5 @@
+while a <= 2 loop
+    #x <-- 1;
+    #y <-- 2;
+    x <-- 1 # the grammar only allows one statement within while loops or if checks
+end loop

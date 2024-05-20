@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Test malformed" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="Tester" />
+    <module name="carbonic_es2_jflex" />
+    <option name="PROGRAM_PARAMETERS" value="test/test_malformed.inp" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

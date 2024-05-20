@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Tester | Assign stat wrong use" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="Tester" />
+    <module name="carbonic_es4" />
+    <option name="PROGRAM_PARAMETERS" value="test_files/assign_stat_wrong_use.nl" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

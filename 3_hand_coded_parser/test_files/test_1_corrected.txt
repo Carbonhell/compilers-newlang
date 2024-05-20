@@ -1,0 +1,12 @@
+x <-- 1;
+while x < 10 loop
+   if x == 1 then
+        x <-- d
+   else
+       if x == 2 then
+            x <-- e
+       else
+            x <-- 0
+       end if # this was missing
+   end if
+end loop

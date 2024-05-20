@@ -1,0 +1,10 @@
+while (1) {
+    float a <-- 10.;
+    int b <-- 2;
+    bool c <-- (b + a);
+    if (c) then {
+        return b;
+    } else {
+        return a;
+    }
+}
